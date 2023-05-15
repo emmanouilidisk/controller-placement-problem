@@ -5,7 +5,11 @@
   <a href="https://github.com/othneildrew/Best-README-Template">
     <img src="logo.png" alt="Logo" width="70" height="70">
   </a>
-  <h3 align="center">Comparative Study of Algorithms for the Controller Placement Problem</h3>
+  <h3 align="center">  
+  Comparative Study of Algorithms </h3>
+<h3 align="center">
+    for the Controller Placement Problem
+      </h3>
 </p>
 
 <!-- ABOUT THE PROJECT -->
