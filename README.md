@@ -34,7 +34,8 @@ To compile this implementation of the project you will need:
 ### Installation
 To reproduce the results of the project, run the file "greedy.py".
 
-### Papers
+<!-- Papers --->
+## Papers
 [1]: A K self-adaptive SDN controller placement forwide area networks, Peng XIAO, Zhiyang Li, Song GUO, Heng Qi,Wen-yu Qu, Hai-sheng Yu   
 [2]: A Hierarchical K-means Algorithm for Controller Placement in SDN-based WAN Architecture, Hailan Kuang, Yiwen Qiu, Ruifang Li1, Xinhua Liu 
 
