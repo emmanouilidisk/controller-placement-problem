@@ -27,6 +27,11 @@ def k_center(graph, k):
     dist = [0] * n
     centers = []
     weights = nx.get_edge_attributes(graph, "LinkSpeed")
+    adjacency_matrix = [[0 for _ in range(n)] for _ in range(n)]
+    edges = nx.get_edge_attributes(G, "LinkSpeed")
+    for elem in edges:
+        adjacency_matrix[int(elem[0])][int(elem[1])] = float(edges[elem])
+        adjacency_matrix[int(elem[1])][int(elem[0])] = float(edges[elem])
     for i in range(n):
         dist[i] = 10 ** 9
 
@@ -40,16 +45,12 @@ def k_center(graph, k):
             # updating the distance
             # of the cities to their
             # closest centers
-            temp = (str(max_dist),str(j))
-            if temp in weights.keys():
-                dist[j] = min(dist[j], float(weights[temp]))
-            else:
-                continue
+            # temp = (str(max_dist),str(j))
+            dist[j] = min(dist[j], adjacency_matrix[max_dist][j])
 
-        # updating the index of the
-        # city with the maximum
-        # distance to it's closest center
         max_dist = maxindex(dist, n)
+
+    max_dist = compute_max_dist(adjacency_matrix, centers)
     return (centers, max_dist)
 
 
@@ -95,7 +96,6 @@ def k_star_means(G, K, k_star, theta=0.5, flag=0):
                 cluster_i = set(clusters[i])
                 cluster_j = set(clusters[j])
                 if(len(cluster_i)<1 or len(cluster_j)<1):
-                    
                     flag1 = True
                     break
                 for node_s, node_t in itertools.product(cluster_i, cluster_j):
@@ -108,7 +108,7 @@ def k_star_means(G, K, k_star, theta=0.5, flag=0):
         # print(dist_list)
         sum_d = sum(sum(d))
         if(sum_d == 0):
-            print(sum_d)
+            sum_d = 1
         K_c = len(clusters)
         for i in range(len(clusters)):
             for j in range(i + 1, len(clusters)):
@@ -118,6 +118,7 @@ def k_star_means(G, K, k_star, theta=0.5, flag=0):
 
         # Step 5: Find smallest function value
         min_value = min(function_values.values())
+        # print(function_values)
         min_clusters = [pair for pair in function_values if function_values[pair] == min_value][0]
 
         # Step 6: Merge smallest pair of clusters
@@ -136,6 +137,22 @@ def k_star_means(G, K, k_star, theta=0.5, flag=0):
     max_dist = compute_max_dist(adjacency_matrix, centers)
     return (centers, max_dist)
 
+def compute_clusters(G, centers):
+    adjacency_matrix = [[0 for _ in range(n)] for _ in range(n)]
+    edges = nx.get_edge_attributes(G, "LinkSpeed")
+    clusters = [[] for _ in range(len(centers))]
+    for elem in edges:
+        adjacency_matrix[int(elem[0])][int(elem[1])] = float(edges[elem])
+        adjacency_matrix[int(elem[1])][int(elem[0])] = float(edges[elem])
+    for i in range(n):
+        temp_list = []
+        for j in range(len(centers)):
+            temp_list.append(adjacency_matrix[centers[j]][i])
+        min_index = np.argmin(temp_list)
+        clusters[min_index].append(i)
+
+    return clusters
+
 def compute_max_dist(adjacency_matrix, centers):
     """
     Function Computing the maximum distance between from nodes to the closest center.
@@ -153,7 +170,17 @@ def compute_max_dist(adjacency_matrix, centers):
         for row in adjacency_matrix:
             if(row[center] > max_dist):
                 max_dist = row[center]
-    return max_dist
+    max_latency = 8 / (max_dist * (10**3))
+    return max_latency
+
+def SDNS(G, clusters):
+    sum_var = 0
+    n = nx.number_of_nodes(G)
+    K = len(clusters)
+    for i in range(K):
+        sum_var += len(clusters[i])
+    SDNS_score = np.sqrt((1/K) * (sum_var- (n/K)))
+    return(SDNS_score)
 
 def k_means(X: np.ndarray, k: int, max_iters: int = 1000):
     """
@@ -228,8 +255,8 @@ def k_self_adaptive(G):
 
     # compute graph Laplacian L and matrix V from paper
     L = np.negative(np.array(adjacency_matrix))
-    for i in range(len(graph)):
-        L[i][i] = sum(graph[i])
+    for i in range(n):
+        L[i][i] = sum(adjacency_matrix[i])
     L_eigenvalues, V = np.linalg.eig(L)
     idx = L_eigenvalues.argsort()[::-1]
     for index in idx[:k]:
@@ -273,26 +300,43 @@ def is_connected(adj_matrix):
     # If all nodes were visited, the graph is connected
     return len(visited) == num_nodes
 if __name__ == "__main__":
-    mygraph = [[5*i for i in range(25)]]
-    # G = np.array(mygraph)
-    graph = np.array([[0, 1, 2, 3],
-                  [1, 0, 1, 2],
-                  [2, 1, 0, 1],
-                  [3, 2, 1, 0]])
-    k = 1
+
     # read gfile
-    G = nx.read_graphml('a+.graphml')
+    G = nx.read_graphml('GEANT.graphml')
+    # G = nx.read_graphml('Litnet.graphml')
+
+    # set problem parameters
+    k = 2
     n = nx. number_of_nodes(G)
-    for i in range(100):
-        # run k-center algorithm
-        centers1, max_dist1 = k_center(G, k)
-        print(centers1, max_dist1)
+    # run k-center algorithm
+    centers1, max_dist1 = k_center(G, k)
+    clusters = compute_clusters(G, centers1)
+    SDNS_var = SDNS(G, clusters)
+    print("k-center Algorithm output: ", "Centers: ", centers1, "Latency: ", max_dist1, " SDNS: ", SDNS_var)
 
-        # run k-Self Adaptive Algorithm
-        centers2, max_dist2 = k_self_adaptive(G)
-        print(centers2, max_dist2)
+    # run k-Self Adaptive Algorithm
+    centers2, max_dist2 = k_self_adaptive(G)
+    clusters = compute_clusters(G, centers2)
+    SDNS_var = SDNS(G, clusters)
+    print("k-Self Adaptive Algorithm output: ", "Centers: ", centers2, "Latency: ", max_dist2, " SDNS: ", SDNS_var)
 
-        # run k_star Algorithm
-        k_star = 2*k
-        centers3, max_dist3 = k_star_means(G, k, k_star, theta=1)
-        print(centers3, max_dist3)
+    # run k_star Algorithm
+    k_star = 2*k
+    centers3, max_dist3 = k_star_means(G, k, k_star, theta=0.5)
+    clusters = compute_clusters(G, centers3)
+    SDNS_var = SDNS(G, clusters)
+    print("k_star Algorithm output: ", "Centers: ", centers3, "Latency: ", max_dist3, " SDNS: ", SDNS_var)
+
+    # run k_star Algorithm
+    k_star = 2 * k
+    centers4, max_dist4 = k_star_means(G, k, k_star, theta=0.5)
+    clusters = compute_clusters(G, centers4)
+    SDNS_var = SDNS(G, clusters)
+    print("k_star Algorithm output: ", "Centers: ", centers4, "Latency: ", max_dist4, " SDNS: ", SDNS_var)
+
+    # run k_star Algorithm
+    k_star = 2 * k
+    centers5, max_dist5 = k_star_means(G, k, k_star, theta=1)
+    clusters = compute_clusters(G, centers5)
+    SDNS_var = SDNS(G, clusters)
+    print("k_star Algorithm output: ", "Centers: ", centers5, "Latency: ", max_dist5, " SDNS: ", SDNS_var)
