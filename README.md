@@ -22,8 +22,22 @@ This implementation includes:
 - the k* - Means Algorithm from the [paper](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8337381) of Kuang et al.   
 - the k- Self-Adaptive Algorithm from the [paper](https://link.springer.com/content/pdf/10.1631/FITEE.1500350.pdf) of Xiao et al.
 
-The topologies used are parsed from the [Internet Topology Zoo database](http://www.topology-zoo.org/).
+The topologies used are parsed from the [Internet Topology Zoo database](http://www.topology-zoo.org/)
+and are GEANT (a European Network) and LITNET (network in Lithuania).  
 
+### Topology 1 (GEANT Network)
+<p align="center">
+  <a>
+    <img src="GEANT.png" alt="Logo" width="400" height="400">
+  </a>
+</p>
+
+### Topology 2 (LITNET)
+<p align="center">
+  <a>
+    <img src="litn.png" alt="Logo" width="300" height="300">
+  </a>
+</p>
 
 <!-- GETTING STARTED -->
 ## Getting Started
